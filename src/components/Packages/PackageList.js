@@ -1,36 +1,26 @@
-import { Row, Col, Input } from 'antd';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import PackageCard from './PackageCard';
+import { notification } from 'antd';
 
-export default function PackageList() {
-  const [packages, setPackages] = useState([]);
-  const [searchText, setSearchText] = useState('');
+const handlePurchase = async (packageId) => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    await axios.post('http://localhost:3001/transactions', {
+      userId: user.id,
+      packageId,
+      date: new Date().toISOString().split('T')[0],
+      status: 'pending'
+    });
 
-  useEffect(() => {
-    axios.get('http://localhost:3001/packages')
-      .then(res => setPackages(res.data));
-  }, []);
-
-  const filteredPackages = packages.filter(pkg =>
-    pkg.name.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  return (
-    <div style={{ padding: 24 }}>
-      <Input.Search
-        placeholder="Cari paket..."
-        allowClear
-        onChange={(e) => setSearchText(e.target.value)}
-        style={{ marginBottom: 24 }}
-      />
-      <Row gutter={[16, 16]}>
-        {filteredPackages.map(pkg => (
-          <Col key={pkg.id} xs={24} sm={12} md={8} lg={6}>
-            <PackageCard pkg={pkg} />
-          </Col>
-        ))}
-      </Row>
-    </div>
-  );
-}
+    notification.success({
+      message: 'Berhasil!',
+      description: 'Paket akan aktif setelah pembayaran.',
+      placement: 'topRight'
+    });
+    
+    fetchPackages(); 
+  } catch (error) {
+    notification.error({
+      message: 'Gagal',
+      description: 'Transaksi gagal. Coba lagi.',
+    });
+  }
+};

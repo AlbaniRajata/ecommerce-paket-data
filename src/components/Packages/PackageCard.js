@@ -9,14 +9,18 @@ const PackageCard = ({ pkg, onPurchase }) => {
         <Button 
           type="primary" 
           icon={<ShoppingCartOutlined />}
-          onClick={() => onPurchase(pkg.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPurchase();
+          }}
+          block
         >
           Beli
         </Button>
       ]}
     >
-      <p><b>Harga:</b> Rp{pkg.price.toLocaleString()}</p>
-      <p><b>Masa Berlaku:</b> <Tag color="blue">{pkg.validity}</Tag></p>
+      <p><strong>Harga:</strong> Rp{pkg.price.toLocaleString()}</p>
+      <p><strong>Masa Berlaku:</strong> <Tag color="blue">{pkg.validity}</Tag></p>
       <p>{pkg.description}</p>
     </Card>
   );

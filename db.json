@@ -14,22 +14,94 @@
       "price": 50000,
       "validity": "30 Hari",
       "description": "Kuota 10GB + Unlimited WhatsApp"
+    },
+    {
+      "id": "2",
+      "name": "Paket 25GB",
+      "price": 90000,
+      "validity": "30 Hari",
+      "description": "Kuota 25GB + Unlimited Streaming"
+    },
+    {
+      "id": "3",
+      "name": "Paket 50GB",
+      "price": 150000,
+      "validity": "60 Hari",
+      "description": "Kuota 50GB + Unlimited Night Data"
     }
   ],
   "transactions": [
     {
-      "id": "1",
-      "userId": 1,
+      "id": "71f8",
+      "userId": "1",
       "packageId": 1,
-      "date": "2023-05-01",
-      "status": "completed"
+      "date": "2025-04-30",
+      "status": "completed",
+      "activatedAt": "2025-04-30T18:41:24.875Z"
     },
     {
-      "id": "61d3",
+      "id": "9cd5",
+      "userId": "1",
+      "packageId": 2,
+      "date": "2025-04-30",
+      "status": "completed",
+      "activatedAt": "2025-04-30T18:41:38.324Z"
+    },
+    {
+      "id": "0bdd",
+      "userId": "1",
+      "packageId": 2,
+      "date": "2025-04-30",
+      "status": "completed",
+      "activatedAt": "2025-04-30T18:41:39.125Z"
+    },
+    {
+      "id": "8817",
+      "userId": "1",
+      "packageId": 1,
+      "date": "2025-04-30",
+      "status": "completed",
+      "activatedAt": "2025-04-30T18:41:39.758Z"
+    },
+    {
+      "id": "99fc",
+      "userId": "1",
+      "packageId": 1,
+      "date": "2025-04-30",
+      "status": "completed",
+      "activatedAt": "2025-04-30T19:01:11.270Z"
+    },
+    {
+      "id": "5971",
+      "userId": "1",
+      "packageId": 1,
+      "date": "2025-04-30",
+      "status": "completed",
+      "activatedAt": "2025-04-30T19:07:23.364Z"
+    },
+    {
+      "id": "5a4c",
       "userId": "1",
       "packageId": "1",
       "date": "2025-04-30",
-      "status": "pending"
+      "status": "completed",
+      "activatedAt": "2025-04-30T19:33:04.270Z"
+    },
+    {
+      "id": "6799",
+      "userId": "1",
+      "packageId": "3",
+      "date": "2025-04-30",
+      "status": "completed",
+      "activatedAt": "2025-04-30T19:37:07.649Z"
+    },
+    {
+      "id": "a3c7",
+      "userId": "1",
+      "packageId": "2",
+      "date": "2025-04-30",
+      "status": "completed",
+      "activatedAt": "2025-04-30T19:40:05.013Z"
     }
   ]
 }
