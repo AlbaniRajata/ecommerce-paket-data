@@ -27,10 +27,11 @@
 .custom-table .ant-table-tbody > tr > td {
     text-align: center;
     vertical-align: middle;
+    background-color: #fafafa;
 }
   
 .btn-detail {
-    background-color: #f0f0f0;
+    background-color: #fff;
     border: 1px solid #d9d9d9;
     color: #000;
     border-radius: 6px;
