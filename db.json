@@ -28,6 +28,13 @@
       "price": 150000,
       "validity": "60 Hari",
       "description": "Kuota 50GB + Unlimited Night Data"
+    },
+    {
+      "id": "4",
+      "name": "Paket 100GB",
+      "price": 170000,
+      "validity": "30 Hari",
+      "description": "Kuota 100GB + Unlimited Youtube & Instagram"
     }
   ],
   "transactions": [
@@ -40,68 +47,19 @@
       "activatedAt": "2025-04-30T18:41:24.875Z"
     },
     {
-      "id": "9cd5",
-      "userId": "1",
-      "packageId": 2,
-      "date": "2025-04-30",
-      "status": "completed",
-      "activatedAt": "2025-04-30T18:41:38.324Z"
-    },
-    {
-      "id": "0bdd",
-      "userId": "1",
-      "packageId": 2,
-      "date": "2025-04-30",
-      "status": "completed",
-      "activatedAt": "2025-04-30T18:41:39.125Z"
-    },
-    {
-      "id": "8817",
-      "userId": "1",
-      "packageId": 1,
-      "date": "2025-04-30",
-      "status": "completed",
-      "activatedAt": "2025-04-30T18:41:39.758Z"
-    },
-    {
-      "id": "99fc",
-      "userId": "1",
-      "packageId": 1,
-      "date": "2025-04-30",
-      "status": "completed",
-      "activatedAt": "2025-04-30T19:01:11.270Z"
-    },
-    {
-      "id": "5971",
-      "userId": "1",
-      "packageId": 1,
-      "date": "2025-04-30",
-      "status": "completed",
-      "activatedAt": "2025-04-30T19:07:23.364Z"
-    },
-    {
-      "id": "5a4c",
-      "userId": "1",
-      "packageId": "1",
-      "date": "2025-04-30",
-      "status": "completed",
-      "activatedAt": "2025-04-30T19:33:04.270Z"
-    },
-    {
-      "id": "6799",
+      "id": "a791",
       "userId": "1",
       "packageId": "3",
-      "date": "2025-04-30",
+      "date": "2025-05-02",
       "status": "completed",
-      "activatedAt": "2025-04-30T19:37:07.649Z"
+      "activatedAt": "2025-05-02T14:27:58.042Z"
     },
     {
-      "id": "a3c7",
+      "id": "c6df",
       "userId": "1",
       "packageId": "2",
-      "date": "2025-04-30",
-      "status": "completed",
-      "activatedAt": "2025-04-30T19:40:05.013Z"
+      "date": "2025-05-02",
+      "status": "pending"
     }
   ]
 }

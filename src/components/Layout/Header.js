@@ -1,30 +1,77 @@
-import { Layout, Button } from 'antd';
-import { LogoutOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { Layout, Menu, Button } from 'antd';
+import { useNavigate, useLocation } from 'react-router-dom';
+import './Header.css';
 
-const { Header } = Layout;
+const { Header: AntHeader } = Layout;
 
-export default function AppHeader() {
+export default function Header({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
+  const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
+  const handleAuthButton = () => {
+    if (isLoggedIn) {
+      localStorage.removeItem('user');
+      setIsLoggedIn(false);
+      navigate('/login');
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleMenuClick = (path) => {
+    if (isLoggedIn) {
+      navigate(path);
+    } else {
+      navigate('/login');
+    }
   };
 
   return (
-    <Header style={{ background: '#fff', padding: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ paddingLeft: 24 }}>
-        <h2>E-Commerce Paket Data</h2>
-      </div>
-      {user && (
-        <div style={{ paddingRight: 24 }}>
-          <Button icon={<LogoutOutlined />} onClick={handleLogout}>
-            Logout
-          </Button>
-        </div>
-      )}
-    </Header>
+    <AntHeader className="app-header">
+    <div className="header-left">
+      <img src="assets/logo1.png" alt="Logo" className="logo" />
+      <Menu
+        mode="horizontal"
+        selectedKeys={[location.pathname]}
+        className="header-menu"
+        overflowedIndicator={null}
+      >
+        <Menu.Item
+          key="/"
+          onClick={() => navigate('/')}
+          className={location.pathname === '/' ? 'active-menu' : ''}
+        >
+          Home
+        </Menu.Item>
+        <Menu.Item
+          key="/customer/packages"
+          onClick={() => handleMenuClick('/customer/packages')}
+          className={location.pathname === '/customer/packages' ? 'active-menu' : ''}
+        >
+          Paket Data
+        </Menu.Item>
+        <Menu.Item
+          key="/customer/activation"
+          onClick={() => handleMenuClick('/customer/activation')}
+          className={location.pathname === '/customer/activation' ? 'active-menu' : ''}
+        >
+          Aktivasi
+        </Menu.Item>
+        <Menu.Item
+          key="/customer/transactions"
+          onClick={() => handleMenuClick('/customer/transactions')}
+          className={location.pathname === '/customer/transactions' ? 'active-menu' : ''}
+        >
+          Riwayat Transaksi
+        </Menu.Item>
+      </Menu>
+    </div>
+    <Button
+      className="login-button"
+      onClick={handleAuthButton}
+    >
+      {isLoggedIn ? 'Keluar' : 'Masuk'}
+    </Button>
+  </AntHeader>
   );
 }

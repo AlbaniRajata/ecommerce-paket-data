@@ -1,14 +1,15 @@
-import { Table, Tag, Button, Modal, Descriptions, Spin, notification } from 'antd';
+import { Table, Tag, Button, Modal, notification, Descriptions, Spin } from 'antd';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import './ActivationPage.css'; // Digunakan ulang
+import './ActivationPage.css';
 
 const { useNotification } = notification;
 
-export default function Transactions() {
+export default function ActivationPage() {
   const [transactions, setTransactions] = useState([]);
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activatingId, setActivatingId] = useState(null);
   const [api, contextHolder] = useNotification();
 
   const fetchData = useCallback(async () => {
@@ -20,7 +21,7 @@ export default function Transactions() {
         axios.get('http://localhost:3001/transactions', {
           params: {
             userId: user.id,
-            status: 'completed'
+            status: 'pending'
           }
         }),
         axios.get('http://localhost:3001/packages')
@@ -35,11 +36,11 @@ export default function Transactions() {
       });
 
       setTransactions(mergedData);
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (err) {
+      console.error('Error:', err);
       api.error({
         message: 'Gagal memuat data',
-        description: error.message
+        description: err.message
       });
     } finally {
       setLoading(false);
@@ -48,19 +49,39 @@ export default function Transactions() {
 
   useEffect(() => {
     fetchData();
-
-    const handleUpdate = () => {
-      console.log('Received transaction update event');
-      fetchData();
-    };
-
-    window.addEventListener('transactionUpdated', handleUpdate);
-    return () => window.removeEventListener('transactionUpdated', handleUpdate);
+    window.addEventListener('transactionCreated', fetchData);
+    return () => window.removeEventListener('transactionCreated', fetchData);
   }, [fetchData]);
+
+  const handleActivate = async (id) => {
+    setActivatingId(id);
+    try {
+      await axios.patch(`http://localhost:3001/transactions/${id}`, {
+        status: 'completed',
+        activatedAt: new Date().toISOString()
+      });
+
+      api.success({
+        message: 'Paket Diaktifkan!',
+        placement: 'topRight'
+      });
+
+      fetchData();
+    } catch (error) {
+      api.error({
+        message: 'Gagal Mengaktifkan',
+        description: error.message
+      });
+    } finally {
+      setActivatingId(null);
+    }
+  };
 
   const columns = [
     {
       title: 'No',
+      dataIndex: 'no',
+      key: 'no',
       render: (_, __, index) => index + 1
     },
     {
@@ -69,17 +90,17 @@ export default function Transactions() {
     },
     {
       title: 'Harga',
-      render: (_, record) =>
-        record.package
-          ? `Rp${record.package.price.toLocaleString('id-ID')}`
-          : '-'
+      render: (_, record) => record.package ? `Rp${record.package.price.toLocaleString('id-ID')}` : '-'
     },
     {
-      title: 'Tanggal Aktivasi',
-      render: (_, record) =>
-        record.activatedAt
-          ? new Date(record.activatedAt).toLocaleString('id-ID')
-          : '-'
+      title: 'Deskripsi',
+      render: (_, record) => record.package?.description || '-'
+    },
+    {
+      title: 'Status',
+      render: () => (
+        <Tag className="custom-tag-pending">Pending</Tag>
+      )
     },
     {
       title: 'Aksi',
@@ -88,9 +109,17 @@ export default function Transactions() {
           <Button
             size="small"
             className="btn-detail"
-            onClick={() => setSelectedTransaction(record)}
+            onClick={() => setSelectedItem(record)}
           >
             Detail
+          </Button>
+          <Button
+            size="small"
+            className="btn-activate"
+            loading={activatingId === record.id}
+            onClick={() => handleActivate(record.id)}
+          >
+            Aktifkan
           </Button>
         </div>
       )
@@ -101,7 +130,7 @@ export default function Transactions() {
     <div className="home-container">
       {contextHolder}
       <section className="hero-section">
-        <h1 className="hero-title">Riwayat Transaksi</h1>
+        <h1 className="hero-title">Paket Data Anda</h1>
 
         <Spin spinning={loading}>
           <Table
@@ -113,7 +142,7 @@ export default function Transactions() {
             locale={{
               emptyText: (
                 <div>
-                  <p>Belum ada riwayat transaksi</p>
+                  <p>Belum ada paket data yang dibeli</p>
                 </div>
               )
             }}
@@ -121,40 +150,27 @@ export default function Transactions() {
         </Spin>
 
         <Modal
-          title="Detail Transaksi"
-          open={!!selectedTransaction}
-          onCancel={() => setSelectedTransaction(null)}
+          title="Detail Paket"
+          open={!!selectedItem}
+          onCancel={() => setSelectedItem(null)}
           footer={null}
-          width={700}
         >
-          {selectedTransaction && (
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Nama Paket" span={2}>
-                {selectedTransaction.package?.name || 'Tidak tersedia'}
+          {selectedItem && (
+            <Descriptions bordered column={1}>
+              <Descriptions.Item label="Nama Paket">
+                {selectedItem.package?.name || 'Tidak tersedia'}
               </Descriptions.Item>
               <Descriptions.Item label="Harga">
-                {selectedTransaction.package
-                  ? `Rp${selectedTransaction.package.price.toLocaleString('id-ID')}`
-                  : 'Tidak tersedia'}
+                {selectedItem.package ? `Rp${selectedItem.package.price.toLocaleString('id-ID')}` : 'Tidak tersedia'}
               </Descriptions.Item>
               <Descriptions.Item label="Deskripsi">
-                {selectedTransaction.package?.description || 'Tidak ada deskripsi'}
+                {selectedItem.package?.description || 'Tidak ada deskripsi'}
               </Descriptions.Item>
               <Descriptions.Item label="Masa Berlaku">
-                {selectedTransaction.package?.validity || 'Tidak tersedia'}
+                {selectedItem.package?.validity || 'Tidak tersedia'}
               </Descriptions.Item>
               <Descriptions.Item label="Tanggal Pembelian">
-                {selectedTransaction.date}
-              </Descriptions.Item>
-              <Descriptions.Item label="Tanggal Aktivasi">
-                {selectedTransaction.activatedAt
-                  ? new Date(selectedTransaction.activatedAt).toLocaleString('id-ID')
-                  : 'Tidak tersedia'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Status" span={2}>
-                <Tag color="green" className='status-tag'>
-                  COMPLETED
-                </Tag>
+                {selectedItem.date}
               </Descriptions.Item>
             </Descriptions>
           )}

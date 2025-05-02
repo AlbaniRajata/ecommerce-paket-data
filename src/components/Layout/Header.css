@@ -1,0 +1,59 @@
+.app-header {
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid #e8e8e8;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 40px;
+    margin-right: 24px;
+}
+
+.header-menu {
+    min-width: 1000px;
+    border-bottom: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #fff;
+}
+
+.header-menu .ant-menu-item {
+    color: #000 !important;
+    font-weight: normal;
+    transition: color 0.3s, font-weight 0.3s;
+}
+
+.header-menu .ant-menu-item-selected {
+    font-weight: bold !important;
+    background: transparent !important;
+    border-bottom: none !important;
+    color: #000 !important;
+}
+
+.header-menu .ant-menu-item:hover {
+    color: #000 !important;
+    font-weight: bold !important;
+}
+
+.login-button {
+    width: 10%;
+    background-color: #000;
+    color: #fff;
+    font-weight: 500;
+    border: none;
+    transition: all 0.3s;
+}
+
+.login-button:hover {
+    opacity: 0.9;
+}

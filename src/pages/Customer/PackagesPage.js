@@ -1,168 +1,157 @@
-import { Table, Tag, Button, Modal, notification, Descriptions, Spin } from 'antd';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-
-const { useNotification } = notification;
+import { Button, Card, Spin, Modal, notification } from 'antd';
+import './PackagesPage.css';
 
 export default function PackagesPage() {
-  const [transactions, setTransactions] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activatingId, setActivatingId] = useState(null);
-  const [api, contextHolder] = useNotification();
+  const [activePackage, setActivePackage] = useState(null);
+  const [availablePackages, setAvailablePackages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [api, contextHolder] = notification.useNotification();
+  const [modal, modalContextHolder] = Modal.useModal();
 
-  const fetchData = useCallback(async () => {
+  const fetchPackages = useCallback(async () => {
+    try {
+      const { data } = await axios.get('http://localhost:3001/packages');
+      setAvailablePackages(data);
+    } catch (error) {
+      api.error({
+        message: 'Gagal memuat daftar paket',
+        description: error.message,
+      });
+    }
+  }, [api]);
+
+  const fetchActivePackage = useCallback(async () => {
     try {
       setLoading(true);
       const user = JSON.parse(localStorage.getItem('user'));
-      
-      const [transactionsRes, packagesRes] = await Promise.all([
-        axios.get('http://localhost:3001/transactions', {
-          params: {
-            userId: user.id,
-            status: 'pending'
-          }
-        }),
-        axios.get('http://localhost:3001/packages')
-      ]);
 
-      const mergedData = transactionsRes.data.map(transaction => {
-        const pkg = packagesRes.data.find(p => p.id.toString() === transaction.packageId.toString());
-        return {
-          ...transaction,
-          package: pkg || null
-        };
+      const { data: transactions } = await axios.get('http://localhost:3001/transactions', {
+        params: { userId: user.id, status: 'completed' },
       });
 
-      setTransactions(mergedData);
+      if (transactions.length > 0) {
+        const sorted = transactions.sort(
+          (a, b) => new Date(b.activatedAt) - new Date(a.activatedAt)
+        );
+        const latest = sorted[0];
+
+        const { data: pkg } = await axios.get(`http://localhost:3001/packages/${latest.packageId}`);
+
+        const activatedDate = new Date(latest.activatedAt);
+        const validityDays = parseInt(pkg.validity.split(' ')[0]);
+        const expiryDate = new Date(activatedDate);
+        expiryDate.setDate(activatedDate.getDate() + validityDays);
+
+        setActivePackage({
+          ...pkg,
+          activatedAt: activatedDate.toISOString(),
+          expiryDate: expiryDate.toISOString(),
+        });
+      } else {
+        setActivePackage(null);
+      }
     } catch (err) {
-      console.error('Error:', err);
       api.error({
-        message: 'Gagal memuat data',
-        description: err.message
+        message: 'Gagal memuat paket aktif',
+        description: err.message,
       });
     } finally {
       setLoading(false);
     }
   }, [api]);
 
-  useEffect(() => {
-    fetchData();
-    window.addEventListener('transactionCreated', fetchData);
-    return () => window.removeEventListener('transactionCreated', fetchData);
-  }, [fetchData]);
+  const handlePurchase = (pkgId) => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const pkg = availablePackages.find((p) => p.id === pkgId);
 
-  const handleActivate = async (id) => {
-    setActivatingId(id);
-    try {
-      await axios.patch(`http://localhost:3001/transactions/${id}`, {
-        status: 'completed',
-        activatedAt: new Date().toISOString()
-      });
+    modal.confirm({
+      title: 'Konfirmasi Pembelian',
+      content: (
+        <>
+          <p>Anda akan membeli paket:</p>
+          <strong>{pkg.name}</strong>
+          <p>Harga: Rp{pkg.price.toLocaleString('id-ID')}</p>
+          <p>Masa berlaku: {pkg.validity}</p>
+          <p>{pkg.description}</p>
+        </>
+      ),
+      okText: 'Beli Sekarang',
+      cancelText: 'Batal',
+      async onOk() {
+        try {
+          await axios.post('http://localhost:3001/transactions', {
+            userId: user.id,
+            packageId: pkgId,
+            date: new Date().toISOString().split('T')[0],
+            status: 'pending',
+          });
 
-      api.success({
-        message: 'Paket Diaktifkan!',
-        placement: 'topRight'
-      });
+          api.success({
+            message: 'Pembelian Berhasil!',
+            description: 'Silakan aktifkan paket di menu Aktivasi',
+          });
 
-      fetchData();
-    } catch (error) {
-      api.error({
-        message: 'Gagal Mengaktifkan',
-        description: error.message
-      });
-    } finally {
-      setActivatingId(null);
-    }
+          window.dispatchEvent(new Event('transactionCreated'));
+        } catch (error) {
+          api.error({ message: 'Gagal', description: error.message });
+        }
+      },
+    });
   };
 
-  const columns = [
-    {
-      title: 'No',
-      render: (_, __, index) => index + 1
-    },
-    {
-      title: 'Nama Paket',
-      render: (_, record) => record.package?.name || 'Paket tidak ditemukan'
-    },
-    {
-      title: 'Harga',
-      render: (_, record) => record.package ? `Rp${record.package.price.toLocaleString('id-ID')}` : '-'
-    },
-    {
-      title: 'Deskripsi',
-      render: (_, record) => record.package?.description || '-'
-    },
-    {
-      title: 'Status',
-      render: (_, record) => <Tag color="orange">PENDING</Tag>
-    },
-    {
-      title: 'Aksi',
-      render: (_, record) => (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button size="small" onClick={() => setSelectedItem(record)}>
-            Detail
-          </Button>
-          <Button
-            type="primary"
-            size="small"
-            onClick={() => handleActivate(record.id)}
-            loading={activatingId === record.id}
-          >
-            Aktifkan
-          </Button>
-        </div>
-      )
-    }
-  ];
+  useEffect(() => {
+    fetchPackages();
+    fetchActivePackage();
+  }, [fetchPackages, fetchActivePackage]);
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="packages-page">
       {contextHolder}
-      <h2>Paket Data Anda</h2>
-      
-      <Spin spinning={loading}>
-        <Table
-          columns={columns}
-          dataSource={transactions}
-          rowKey="id"
-          locale={{
-            emptyText: (
-              <div>
-                <p>Belum ada paket data yang dibeli</p>
-              </div>
-            )
-          }}
-        />
-      </Spin>
+      {modalContextHolder}
+      <h1 className="section-title">Paket Data Aktif</h1>
 
-      <Modal
-        title="Detail Paket"
-        open={!!selectedItem}
-        onCancel={() => setSelectedItem(null)}
-        footer={null}
-      >
-        {selectedItem && (
-          <Descriptions bordered column={1}>
-            <Descriptions.Item label="Nama Paket">
-              {selectedItem.package?.name || 'Tidak tersedia'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Harga">
-              {selectedItem.package ? `Rp${selectedItem.package.price.toLocaleString('id-ID')}` : 'Tidak tersedia'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Deskripsi">
-              {selectedItem.package?.description || 'Tidak ada deskripsi'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Masa Berlaku">
-              {selectedItem.package?.validity || 'Tidak tersedia'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tanggal Pembelian">
-              {selectedItem.date}
-            </Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
+      {loading ? (
+        <Spin />
+      ) : activePackage ? (
+        <div className="active-package-card">
+            <div className="active-package-grid">
+                <div className="left-col">
+                <div className="pkg-name">{activePackage.name}</div>
+                <div className="pkg-price">Rp{activePackage.price.toLocaleString('id-ID')}</div>
+                </div>
+                <div className="center-col">
+                <div><strong>Masa Berlaku:</strong> {activePackage.validity}</div>
+                <div><strong>Fitur:</strong> {activePackage.description}</div>
+                </div>
+                <div className="right-col">
+                <div><strong>Diaktifkan:</strong> {new Date(activePackage.activatedAt).toLocaleString('id-ID')}</div>
+                <div><strong>Berlaku hingga:</strong> {new Date(activePackage.expiryDate).toLocaleDateString('id-ID')}</div>
+                </div>
+            </div>
+        </div>
+      ) : (
+        <p>Tidak ada paket aktif saat ini.</p>
+      )}
+
+      <h2 className="section-title">Paket Data Tersedia</h2>
+      <p className="section-subtitle">Pembelian Paket Data Sekarang Lebih Mudah, Nikmati Semua Pilihannya</p>
+      <div className="packages-grid">
+        {availablePackages.map((pkg) => (
+          <Card
+            key={pkg.id}
+            className={`package-card ${pkg.name.includes('100GB') ? 'highlight' : ''}`}
+            title={pkg.name}
+            bordered={false}
+          >
+            <p><strong>Rp{pkg.price.toLocaleString('id-ID')}</strong></p>
+            <p>{pkg.validity}</p>
+            <p>{pkg.description}</p>
+            <Button onClick={() => handlePurchase(pkg.id)}>Beli</Button>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
